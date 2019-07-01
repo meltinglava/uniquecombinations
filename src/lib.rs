@@ -15,7 +15,7 @@ where
     pub fn new(mut original: Vec<T>, len: usize) -> Self {
         match original.len() > len && len >= 1 {
             true => {
-                original.sort();
+                original.sort_unstable();
                 Self {
                     original,
                     possition: (0..len).collect(),
@@ -37,37 +37,94 @@ where
     }
 
     pub fn next_perm(&mut self, mut col: &mut Vec<T>) -> bool {
-        let ans = match self.started {
-            false => {
+        match self.started {
+            false => { // first pass throught
                 self.started = true;
                 self.insert(&mut col);
                 true
             }
             true => {
-                let mut change = false;
                 let org_len = self.original.len();
-                if self.possition[self.len - 1] != org_len - 1 {
+                // check if we cant bump the back number
+
+                if self.original[self.possition[self.len - 1]] == self.original[org_len - 1] {
+                    // locate the number closest behind that needs to be bumped
                     for i in 2..=self.len {
-                        if self.possition[self.len - i] != org_len - i {
-                            let val = &self.original[self.possition[self.len - i]];
-                            for var in iterable {}
-                            break true;
+                        if self.original[self.possition[self.len - i]] < self.original[org_len - i] {
+                            //find the value of the
+                            let lastpos = self.possition[self.len - i];
+                            let val = &self.original[lastpos];
+                            for j in lastpos+1..org_len {
+                                if *val < self.original[j] {
+                                    for k in 0..i {
+                                        self.possition[self.len - i + k] = j + k;
+                                    }
+                                    self.insert(&mut col);
+                                    return true;
+                                }
+                            }
                         }
                     }
+                    return false;
                 } else {
-                    self.possition[self.len - 1] += 1;
+                    let mut i = self.possition[self.len - 1];
+                    let current = &self.original[i];
+                    let mut next = current;
+                    while current == next {
+                        i += 1;
+                        next = &self.original[i];
+                    }
+                    self.possition[self.len - 1] = i;
+                    self.insert(&mut col);
                     true
                 }
             }
-        };
-        unimplemented!()
+        }
+    }
+}
+
+impl<T> Iterator for SelectingPermutation<T>
+where
+    T: Ord + Clone
+{
+    type Item = Vec<T>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let mut vals = Vec::with_capacity(self.len);
+        match self.next_perm(&mut vals) {
+            false => None,
+            true => Some(vals),
+        }
     }
 }
 
 #[cfg(test)]
 mod tests {
+    use super::*;
+
     #[test]
-    fn it_works() {
-        assert_eq!(2 + 2, 4);
+    fn equals() {
+        assert!(SelectingPermutation::new(vec![2, 2, 2], 2).next().unwrap() == vec![2, 2])
+    }
+
+    #[test]
+    fn t_123() {
+        assert!(
+            dbg!(SelectingPermutation::new(vec![1, 2, 3], 2).take(10).collect::<Vec<_>>()) == vec![vec![1, 2], vec![1, 3], vec![2, 3]])
+    }
+
+    #[test]
+    fn complicated() {
+        let actual: Vec<_> = SelectingPermutation::new(vec![1, 2, 2, 3, 4], 3).collect();
+        let expected = vec![
+            vec![1, 2, 2],
+            vec![1, 2, 3],
+            vec![1, 2, 4],
+            vec![1, 3, 4],
+            vec![2, 2, 3],
+            vec![2, 2, 4],
+            vec![2, 3, 4],
+        ];
+        assert!(actual == expected)
     }
 }
