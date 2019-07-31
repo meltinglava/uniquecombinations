@@ -1,5 +1,5 @@
 [package]
-name = "partial_perm"
+name = "combinations"
 version = "0.1.0"
 authors = ["ros"]
 edition = "2018"
