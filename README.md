@@ -4,7 +4,7 @@ This crate give you all the combinations of values in a vec
 
 ## Example
 
-```rs
+```rust
 let actual: Vec<_> = Combinations::new(vec![1, 2, 2, 3, 4], 3).collect();
 let expected = vec![
     vec![1, 2, 2],
@@ -16,7 +16,6 @@ let expected = vec![
     vec![2, 3, 4],
 ];
 assert!(actual == expected);
-
 ```
 
 ## Contributing
